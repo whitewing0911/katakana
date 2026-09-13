@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가타카나 읽기 연습</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #eef2ff, #f8fafc);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      color: #1e293b;
+    }
+
+    .container {
+      width: min(100%, 650px);
+      background: white;
+      padding: 32px;
+      border-radius: 24px;
+      box-shadow: 0 15px 40px rgba(15, 23, 42, 0.12);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    .description {
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+
+    .status {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .status span {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .word-box {
+      padding: 42px 20px;
+      margin-bottom: 22px;
+      border-radius: 18px;
+      background: #f8fafc;
+    }
+
+    .japanese {
+      font-size: 42px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      word-break: keep-all;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      outline: none;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .check-btn {
+      width: 100%;
+      margin-bottom: 12px;
+      background: #4f46e5;
+      color: white;
+    }
+
+    .next-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .next-buttons button {
+      flex: 1;
+    }
+
+    .next-btn {
+      background: #0f172a;
+      color: white;
+    }
+
+    .unknown-btn {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .retry-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: #16a34a;
+      color: white;
+    }
+
+    .restart-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .result {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 12px;
+      line-height: 1.7;
+    }
+
+    .correct {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .wrong {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .meaning {
+      margin-top: 6px;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #finishedScreen {
+      display: none;
+    }
+
+    #finishedScreen h2 {
+      font-size: 28px;
+      margin-top: 0;
+    }
+
+    .final-score {
+      margin: 22px 0;
+      font-size: 23px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 520px) {
+      .container {
+        padding: 24px 18px;
+      }
+
+      .status {
+        gap: 6px;
+      }
+
+      .status span {
+        font-size: 12px;
+      }
+
+      .japanese {
+        font-size: 34px;
+      }
+
+      .next-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- 문제 화면 -->
+    <div id="quizScreen">
+      <h1>가타카나 읽기 연습</h1>
+
+      <div class="description">
+        일본어 단어를 보고 한글 발음을 입력하세요.
+      </div>
+
+      <div class="status">
+        <span id="progress">1 / 62</span>
+        <span id="score">정답 0개</span>
+        <span id="accuracy">정답률 0%</span>
+      </div>
+
+      <div class="word-box">
+        <div class="japanese" id="japaneseWord">アイドル</div>
+      </div>
+
+      <input
+        type="text"
+        id="answerInput"
+        placeholder="한글 발음 입력"
+        autocomplete="off"
+      >
+
+      <button class="check-btn" id="checkBtn">
+        정답 확인
+      </button>
+
+      <div class="result" id="result"></div>
+
+      <div class="next-buttons">
+        <button class="next-btn hidden" id="nextBtn">
+          다음 문제
+        </button>
+
+        <button class="unknown-btn hidden" id="unknownBtn">
+          모르는 단어로 추가하고 다음 문제
+        </button>
+      </div>
+
+      <button class="retry-btn" id="retryWrongBtn" disabled>
+        틀린 문제 다시 풀기
+      </button>
+
+      <button class="restart-btn" id="restartBtn">
+        처음부터 다시
+      </button>
+    </div>
+
+    <!-- 완료 화면 -->
+    <div id="finishedScreen">
+      <h2>🎉 문제 완료!</h2>
+
+      <div class="final-score" id="finalScore"></div>
+      <div id="finalMessage"></div>
+
+      <button class="retry-btn" id="finishedRetryBtn">
+        틀린 문제 다시 풀기
+      </button>
+
+      <button class="restart-btn" id="finishedRestartBtn">
+        처음부터 다시
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const words = [
+      ["アイドル", "아이도루", "아이돌"],
+      ["アトラクション", "아토라쿠숀", "놀이기구"],
+      ["アナウンサー", "아나운사ㅡ", "아나운서"],
+      ["アニメ", "아니메", "애니메이션"],
+      ["アルバイト", "아루바이토", "아르바이트"],
+      ["オッケー", "옷께ㅡ", "OK"],
+      ["オレンジ ジュース", "오렌지 쥬ㅡ스", "오렌지 주스"],
+      ["プリン", "푸린", "푸딩"],
+      ["カード", "카ㅡ도", "카드"],
+      ["ホテル", "호테루", "호텔"],
+      ["カフェ", "카훼", "카페"],
+      ["カメラ", "카메라", "카메라"],
+      ["ギター", "기타ㅡ", "기타"],
+      ["キムチ", "키무치", "김치"],
+      ["クイズ", "쿠이즈", "퀴즈"],
+      ["クッキー", "쿳끼ㅡ", "쿠키"],
+      ["グッズ", "굿즈", "상품"],
+      ["クラス", "쿠라스", "교실"],
+      ["ケーキ", "케ㅡ키", "케이크"],
+      ["ゲーム", "게ㅡ무", "게임"],
+      ["トッポッキ", "톳뽓끼", "떡볶이"],
+      ["ニュース", "뉴ㅡ스", "뉴스"],
+      ["パーティー", "파ㅡ티ㅡ", "파티"],
+      ["バス", "바스", "버스"],
+      ["テスト", "테스토", "시험"],
+      ["バスケット ボール", "바스켓또 보ㅡ루", "농구"],
+      ["パソコン", "파소콘", "컴퓨터"],
+      ["タッチ", "탓찌", "터치"],
+      ["デパート", "데파ㅡ토", "백화점"],
+      ["トイレ", "토이레", "화장실"],
+      ["ピアノ", "피아노", "피아노"],
+      ["プログラマー", "프로구라마ㅡ", "프로그래머"],
+      ["ヘア デザイナー", "헤아 데자이나ㅡ", "헤어디자이너"],
+      ["ポテト", "포테토", "감자"],
+      ["ペット", "펫또", "애완동물"],
+      ["ヨガ", "요가", "요가"],
+      ["ボランティア", "보란티아", "자원봉사활동"],
+      ["マイク", "마이쿠", "마이크"],
+      ["メール", "메에루", "메일"],
+      ["ラーメン", "라아멘", "라면"],
+      ["レストラン", "레스토란", "음식점"],
+      ["ロボット", "로봇또", "로봇"],
+      ["アイスクリーム", "아이스쿠리ㅡ무", "아이스크림"],
+      ["アメリカ", "아메리카", "미국"],
+      ["オムライス", "오무라이스", "오므라이스"],
+      ["カレー", "카레ㅡ", "카레"],
+      ["コーラ", "코ㅡ라", "콜라"],
+      ["コップ", "콧뿌", "컵"],
+      ["コロッケ", "코롯께", "고로케"],
+      ["コンビニ", "콘비니", "편의점"],
+      ["ゴルフ", "고루후", "골프"],
+      ["サッカー", "삿까ㅡ", "축구"],
+      ["ジョギング", "죠깅구", "조깅"],
+      ["ショッピング", "숏삥구", "쇼핑"],
+      ["スーパー", "수ㅡ파ㅡ", "슈퍼마켓"],
+      ["スキー", "스키ㅡ", "스키"],
+      ["スポーツ", "스포ㅡ츠", "스포츠"],
+      ["ズボン", "즈본", "바지"],
+      ["タクシー", "타쿠시ㅡ", "택시"],
+      ["ダンス", "단스", "춤 / 댄스"],
+      ["チーズ", "치ㅡ즈", "치즈"],
+      ["チケット", "치켓또", "티켓"]
+    ];
+
+    const japaneseWord = document.getElementById("japaneseWord");
+    const answerInput = document.getElementById("answerInput");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const unknownBtn = document.getElementById("unknownBtn");
+    const result = document.getElementById("result");
+
+    const progress = document.getElementById("progress");
+    const score = document.getElementById("score");
+    const accuracy = document.getElementById("accuracy");
+
+    const quizScreen = document.getElementById("quizScreen");
+    const finishedScreen = document.getElementById("finishedScreen");
+
+    const finalScore = document.getElementById("finalScore");
+    const finalMessage = document.getElementById("finalMessage");
+
+    const retryWrongBtn = document.getElementById("retryWrongBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    const finishedRetryBtn = document.getElementById("finishedRetryBtn");
+    const finishedRestartBtn = document.getElementById("finishedRestartBtn");
+
+    let quizList = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+    let answeredCount = 0;
+    let wrongWords = [];
+    let isAnswered = false;
+
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    function normalize(text) {
+      return text
+        .trim()
+        .replace(/\s+/g, "")
+        .replace(/[ㅡー]/g, "-")
+        .toLowerCase();
+    }
+
+    function updateStatus() {
+      progress.textContent =
+        `${Math.min(currentIndex + 1, quizList.length)} / ${quizList.length}`;
+
+      score.textContent = `정답 ${correctCount}개`;
+
+      const rate = answeredCount === 0
+        ? 0
+        : Math.round((correctCount / answeredCount) * 100);
+
+      accuracy.textContent = `정답률 ${rate}%`;
+
+      retryWrongBtn.disabled = wrongWords.length === 0;
+    }
+
+    function loadQuestion() {
+      if (currentIndex >= quizList.length) {
+        finishQuiz();
+        return;
+      }
+
+      const current = quizList[currentIndex];
+
+      japaneseWord.textContent = current[0];
+      answerInput.value = "";
+      answerInput.disabled = false;
+
+      result.style.display = "none";
+      result.className = "result";
+
+      checkBtn.classList.remove("hidden");
+      nextBtn.classList.add("hidden");
+      unknownBtn.classList.add("hidden");
+
+      isAnswered = false;
+
+      updateStatus();
+      answerInput.focus();
+    }
+
+    function checkAnswer() {
+      if (isAnswered) return;
+
+      const userAnswer = answerInput.value;
+
+      if (userAnswer.trim() === "") {
+        result.style.display = "block";
+        result.className = "result wrong";
+        result.innerHTML = "발음을 입력해주세요.";
+        return;
+      }
+
+      const current = quizList[currentIndex];
+      const isCorrect =
+        normalize(userAnswer) === normalize(current[1]);
+
+      answeredCount++;
+
+      if (isCorrect) {
+        correctCount++;
+
+        result.className = "result correct";
+        result.innerHTML = `
+          <div>⭕ 정답입니다!</div>
+          <div>정답: <strong>${current[1]}</strong></div>
+          <div class="meaning">뜻: ${current[2]}</div>
+        `;
+      } else {
+        addWrongWord(current);
+
+        result.className = "result wrong";
+        result.innerHTML = `
+          <div>❌ 틀렸습니다.</div>
+          <div>정답: <strong>${current[1]}</strong></div>
+          <div class="meaning">뜻: ${current[2]}</div>
+        `;
+      }
+
+      result.style.display = "block";
+
+      answerInput.disabled = true;
+      checkBtn.classList.add("hidden");
+
+      nextBtn.classList.remove("hidden");
+      unknownBtn.classList.remove("hidden");
+
+      isAnswered = true;
+      updateStatus();
+    }
+
+    function addWrongWord(word) {
+      const alreadyAdded = wrongWords.some(
+        item => item[0] === word[0]
+      );
+
+      if (!alreadyAdded) {
+        wrongWords.push(word);
+      }
+    }
+
+    function addToUnknownAndNext() {
+      if (!isAnswered) return;
+
+      const current = quizList[currentIndex];
+
+      addWrongWord(current);
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      loadQuestion();
+    }
+
+    function finishQuiz() {
+      quizScreen.style.display = "none";
+      finishedScreen.style.display = "block";
+
+      const rate = answeredCount === 0
+        ? 0
+        : Math.round((correctCount / answeredCount) * 100);
+
+      finalScore.textContent =
+        `${correctCount} / ${quizList.length} 정답 · 정답률 ${rate}%`;
+
+      if (wrongWords.length === 0) {
+        finalMessage.textContent =
+          "모든 문제를 맞혔습니다! 완벽합니다 🎉";
+      } else {
+        finalMessage.textContent =
+          `다시 풀 단어가 ${wrongWords.length}개 있습니다.`;
+      }
+
+      finishedRetryBtn.disabled = wrongWords.length === 0;
+    }
+
+    function startQuiz(list) {
+      quizList = shuffle(list);
+      currentIndex = 0;
+      correctCount = 0;
+      answeredCount = 0;
+      wrongWords = [];
+
+      quizScreen.style.display = "block";
+      finishedScreen.style.display = "none";
+
+      loadQuestion();
+    }
+
+    function retryWrongQuestions() {
+      if (wrongWords.length === 0) return;
+
+      startQuiz(wrongWords);
+    }
+
+    function restartQuiz() {
+      startQuiz(words);
+    }
+
+    checkBtn.addEventListener("click", checkAnswer);
+    nextBtn.addEventListener("click", nextQuestion);
+    unknownBtn.addEventListener("click", addToUnknownAndNext);
+
+    retryWrongBtn.addEventListener("click", retryWrongQuestions);
+    finishedRetryBtn.addEventListener("click", retryWrongQuestions);
+
+    restartBtn.addEventListener("click", restartQuiz);
+    finishedRestartBtn.addEventListener("click", restartQuiz);
+
+    answerInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+
+        if (!isAnswered) {
+          checkAnswer();
+        } else {
+          nextQuestion();
+        }
+      }
+    });
+
+    startQuiz(words);
+  </script>
+</body>
+</html>
